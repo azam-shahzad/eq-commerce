@@ -30,4 +30,8 @@ Unzip and open `index.html` in a browser. No install or server needed.
 | Stock | `stock.html` |
 | Projects | `projects.html` |
 
+## Archive
+
+`archive/eQ-Commerce-Overview-HTML.zip` holds the earlier Overview v4 and v5 source files (20 Nov).
+
 Design file (Figma): https://www.figma.com/design/WG54Fggc8UCTfquBFzfZPt
