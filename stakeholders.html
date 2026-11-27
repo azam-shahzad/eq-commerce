@@ -877,8 +877,8 @@ function warnH(){const n=needs(ED);return n.length?'<button type="button" class=
 function openSh(id){const x=SH.find(c=>c.id===id);if(!x)return;ED=JSON.parse(JSON.stringify(x));
   const tag=x.state.toUpperCase(),vies=x.vat?'Valid':'No VAT number';
   const h=drawerHead(tag,esc(x.name),x.kind+' · '+(x.city?esc(x.city)+', ':'')+x.country)+'<form class="db shed" id="frm" novalidate>'+
-  '<div class="pk"><span>Party key <code>'+partyKey(x)+'</code></span><button type="button" class="gh sm" data-copy="'+partyKey(x)+'">Copy</button></div><p class="hint" style="margin:6px 0 0">Changes apply to the directory record, not to contracts already sent.</p>'+
-  '<nav class="jn" aria-label="Sections"><button type="button" data-jump="sIde">Identity</button><button type="button" data-jump="sRel">Relationship</button><button type="button" data-jump="sCon">Contacts</button><button type="button" data-jump="sAdr">Address</button><button type="button" data-jump="sBank">Banking</button><button type="button" data-jump="sHis">History</button></nav>'+
+  '<p class="hint" style="margin:0">Changes apply to the directory record, not to contracts already sent.</p>'+
+  
   '<div class="tiles2"><div><small>STATUS</small><b>'+stH(x)+'</b></div><div><small>DEALS</small><b>'+x.deals+'</b><span class="hint">'+(x.deals?dl(x.deals)+' so far':'No deals with this company yet.')+'</span></div></div>'+
   '<div id="needBox">'+warnH()+'</div>'+
   '<div class="sec" id="sIde">COMPANY IDENTITY</div><p class="hint sub">From the group register, shared by every company in the group.</p><div class="dkv">'+kv('ENTITY NAME',x.name.toUpperCase())+kv('TYPE','Company')+kv('ORGANISATION NUMBER',x.org)+kv('VAT NUMBER',x.vat)+kv('REGISTERED CITY',x.regCity||x.city)+kv('COUNTRY',x.country)+'</div>'+
