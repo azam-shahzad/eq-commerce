@@ -752,7 +752,8 @@ function build(s){var h='',i=0;[].forEach.call(s.children,function(c){
   if(c.tagName==='OPTGROUP'){h+='<div class="eqsl-g" role="presentation">'+esc(c.label)+'</div>';[].forEach.call(c.children,function(o){h+=opt(o)})}else if(c.tagName==='OPTION')h+=opt(c)});
  function opt(o){var x=o.index;return '<div class="eqsl-o" role="option" id="eqsl'+uid+'-'+x+'" data-i="'+x+'" aria-selected="'+(o.selected)+'"'+(o.disabled?' aria-disabled="true"':'')+'>'+esc(o.textContent.trim())+'</div>'}
  return h}
-function place(){if(!cur)return;var r=cur.s.getBoundingClientRect(),k=z(),el=cur.el;if(!r.width&&!r.height){close();return}
+function anchor(s){var a=s.closest('.pill,label.pill,.eqtb-chip,.ifx');if(a){var ra=a.getBoundingClientRect(),rs=s.getBoundingClientRect();if(ra.width&&ra.width<rs.width*3+120&&rs.top>=ra.top-2&&rs.bottom<=ra.bottom+2)return a}return s}
+function place(){if(!cur)return;var r=anchor(cur.s).getBoundingClientRect(),k=z(),el=cur.el;if(!r.width&&!r.height){close();return}
  el.style.minWidth=Math.max(180,r.width/k)+'px';var h=el.offsetHeight,below=(innerHeight-r.bottom)/k,above=r.top/k;
  el.style.left=Math.min(r.left/k,innerWidth/k-el.offsetWidth-8)+'px';
  el.style.top=(below<h+12&&above>below?(r.top/k-h-6):(r.bottom/k+6))+'px'}
