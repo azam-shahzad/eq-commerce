@@ -371,6 +371,46 @@ addEventListener('resize',function(){cur&&place()});
 document.addEventListener('focusout',function(e){if(cur&&e.target===cur.s)setTimeout(function(){if(cur&&document.activeElement!==cur.s)close()},0)});
 })();
 </script>
+<style id="eqan-css">
+.eqtb-drop:not([hidden]){animation:eqanIn .16s cubic-bezier(.16,1,.3,1) both;transform-origin:top left}
+.eqtb-drop.eqtb-dr:not([hidden]),.eqtb-view .eqtb-drop:not([hidden]){transform-origin:top right}
+.eqtb-drop.eqan-out{animation:eqanOut .12s ease-in both!important;pointer-events:none}
+@keyframes eqanIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes eqanOut{from{opacity:1}to{opacity:0;transform:translateY(-2px)}}
+.eqtb-drop.eqan-first:not([hidden])>a,.eqtb-drop.eqan-first:not([hidden])>button{animation:eqanItem .2s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--eqi,0)*18ms + 30ms)}
+@keyframes eqanItem{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.eqtb-drop a,.eqtb-drop button{transition:background .1s ease,color .1s ease}
+.eqtb-cv{transition:transform .16s cubic-bezier(.16,1,.3,1)}
+[aria-expanded="true"]>.eqtb-cv,[aria-expanded="true"] .eqtb-cv{transform:rotate(180deg)}
+.eqtb-nav{position:relative}
+.eqan-ind{position:absolute;top:0;left:0;height:38px;border-radius:10px;background:#3A454B;pointer-events:none;z-index:0;transition:transform .22s cubic-bezier(.16,1,.3,1),width .22s cubic-bezier(.16,1,.3,1)}
+.eqtb-nav.eqan-on .eqtb-tab{position:relative;z-index:1}
+.eqtb-nav.eqan-on .eqtb-tab[data-on]{background:transparent}
+.eqtb-nav.eqan-on .eqtb-tab[data-on]:hover,.eqtb-nav.eqan-on .eqtb-tab[data-on][aria-expanded=true]{background:rgba(255, 255, 255,.06)}
+@media (prefers-reduced-motion:reduce){.eqtb-drop:not([hidden]),.eqtb-drop.eqan-out,.eqtb-drop.eqan-first:not([hidden])>a,.eqtb-drop.eqan-first:not([hidden])>button{animation:eqanFade .12s linear both!important;animation-delay:0s!important}.eqtb-cv,.eqan-ind{transition:none}}
+@keyframes eqanFade{from{opacity:0}to{opacity:1}}
+</style>
+<script id="eqan-js">
+(function(){
+var RM=matchMedia('(prefers-reduced-motion: reduce)'),seen=new WeakSet(),busy=new WeakSet();
+function prep(d){if(d.dataset.eqan)return;d.dataset.eqan='1';[].forEach.call(d.querySelectorAll(':scope>a,:scope>button'),function(x,i){x.style.setProperty('--eqi',i)});
+ new MutationObserver(function(rs){var wasOpen=rs.some(function(r){return r.oldValue===null});if(d.hidden){if(!wasOpen||busy.has(d)||RM.matches)return;busy.add(d);d.hidden=false;d.classList.add('eqan-out');setTimeout(function(){d.classList.remove('eqan-out');d.hidden=true;setTimeout(function(){busy.delete(d)},0)},120)}
+  else if(!busy.has(d)||!d.classList.contains('eqan-out')){if(!seen.has(d)){seen.add(d);d.classList.add('eqan-first')}else d.classList.remove('eqan-first')}}).observe(d,{attributes:true,attributeFilter:['hidden'],attributeOldValue:true})}
+var K='eqanTab';
+function ind(nav){if(nav.dataset.eqan)return;var on=nav.querySelector('.eqtb-tab[data-on]');if(!on)return;nav.dataset.eqan='1';
+ var el=document.createElement('span');el.className='eqan-ind';el.setAttribute('aria-hidden','true');nav.insertBefore(el,nav.firstChild);nav.classList.add('eqan-on');
+ function at(t){var z=parseFloat(getComputedStyle(document.documentElement).zoom)||1,n=nav.getBoundingClientRect(),r=t.getBoundingClientRect();return{x:(r.left-n.left)/z-nav.clientLeft+nav.scrollLeft,w:r.width/z,y:(r.top-n.top)/z-nav.clientTop,h:r.height/z}}
+ function put(p,anim){el.style.transition=anim?'':'none';el.style.width=p.w+'px';el.style.height=p.h+'px';el.style.transform='translate('+p.x+'px,'+p.y+'px)'}
+ var to=at(on),from=null;try{from=JSON.parse(sessionStorage.getItem(K)||'null')}catch(e){}
+ if(from&&from.k!==on.dataset.eqmenu&&!RM.matches){var ft=nav.querySelector('.eqtb-tab[data-eqmenu="'+from.k+'"]');if(ft){put(at(ft),false);el.offsetWidth;requestAnimationFrame(function(){put(to,true)})}else put(to,false)}else put(to,false);
+ try{sessionStorage.setItem(K,JSON.stringify({k:on.dataset.eqmenu}))}catch(e){}
+ addEventListener('resize',function(){put(at(on),false)})}
+function scan(){document.querySelectorAll('.eqtb-drop').forEach(prep);document.querySelectorAll('.eqtb-nav').forEach(ind)}
+var q=0;function mo(){if(q)return;q=requestAnimationFrame(function(){q=0;scan()})}
+function start(){scan();if(window.MutationObserver)new MutationObserver(mo).observe(document.body,{childList:true,subtree:true})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
 </head>
 <body>
 <div id="frame"><div id="stage"></div></div>
