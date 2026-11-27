@@ -667,7 +667,7 @@ function savePhone(){var i=document.getElementById('eqacPh'),v=i.value.trim().re
  var was=ME.phone;ME.phone=v;var ok=saveMe();acRender('[data-eqac-edit]');if(window.eqToast)eqToast({type:'success',title:v?(was?'Contact updated':'Contact added'):'Contact removed',msg:(v?v+' · ':'')+'saved against '+ME.name+(ok?'':'. It is not kept after you close the browser here.')})}
 function pickPic(file){if(!file)return;if(!/^image\//.test(file.type)){if(window.eqToast)eqToast({type:'error',title:'That file is not a picture',msg:'Choose a JPG, PNG or WebP image.'});return}
  var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement('canvas'),S=160;c.width=c.height=S;var g=c.getContext('2d'),m=Math.min(im.width,im.height);g.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,S,S);ME.pic=c.toDataURL('image/jpeg',.85);var ok=saveMe();applyPic();acRender('.eqac-cam');if(window.eqToast)eqToast({type:'success',title:'Picture updated',msg:ok?'It shows in the top bar on every page.':'It shows until you close the browser here.'})};im.onerror=function(){if(window.eqToast)eqToast({type:'error',title:'That picture could not be read',msg:'Try another image.'})};im.src=rd.result};rd.readAsDataURL(file)}
-window.addEventListener('click',function(e){if(!AC)return;var t=e.target;if(!(t.closest&&t.closest('.eqac')))return;e.stopImmediatePropagation();
+window.addEventListener('click',function(e){if(!AC)return;var t=e.target;if(!(t.closest&&t.closest('.eqac')))return;if(t.closest('[data-eqx]'))return;e.stopImmediatePropagation();
  if(t.closest('[data-eqac-close]')){closeAc();return}
  if(t.closest('[data-eqac-pic]')){document.getElementById('eqacFile').click();return}
  if(t.closest('[data-eqac-rm]')){ME.pic='';saveMe();applyPic();acRender('.eqac-cam');if(window.eqToast)eqToast({type:'success',title:'Picture removed',msg:'Your initials show instead.'});return}
@@ -687,6 +687,36 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 var mq=0;function mo(){if(mq)return;mq=requestAnimationFrame(function(){mq=0;if(document.querySelector('[data-soon="Notifications"],[data-soon="Account"]'))init()})}
 function watch(){if(document.body&&window.MutationObserver)new MutationObserver(mo).observe(document.body,{childList:true,subtree:true})}
 if(document.body)watch();else document.addEventListener('DOMContentLoaded',watch);
+})();
+</script>
+<style id="eqxp-css">
+.eqx-ibs{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;align-self:flex-start}
+.eqx-ibs>button{margin-left:0!important}
+.drw.eqx-wide{width:min(880px,calc(100vw - 32px))!important}
+.eqac.eqx-wide{width:min(880px,calc(100vw - 32px))!important}
+.drw,.eqac{transition:width .3s ease}
+@media (prefers-reduced-motion:reduce){.drw,.eqac{transition:none}}
+[data-eqx] svg{width:15px;height:15px}
+</style>
+<script id="eqxp-js">
+(function(){
+var IN='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2.5h4v4M13.5 2.5L9 7M6.5 13.5h-4v-4M2.5 13.5L7 9"/></svg>',
+OUT='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 6.5h-4v-4M9.5 6.5l4-4M2.5 9.5h4v4M6.5 9.5l-4 4"/></svg>';
+var K='eqxWide',pref=false;try{pref=sessionStorage.getItem(K)==='1'}catch(e){}
+function has(d){return d.querySelector('[data-eqx],#wideBtn,[aria-label="Expand panel"],[aria-label="Narrow panel"],[aria-label="Widen the panel"],[aria-label="Expand_panel"]')}
+function label(b,w){b.setAttribute('aria-label',w?'Narrow panel':'Expand panel');b.title=w?'Narrow panel':'Expand panel';b.setAttribute('aria-pressed',String(w));b.innerHTML=w?OUT:IN}
+function fit(d){var x=d.querySelector('.ib[data-close][aria-label^="Close"],.ib[data-x="close"],.eqac-x,.dh button[aria-label^="Close"],button.ib[aria-label^="Close"]');if(!x||has(d))return;
+ var b=document.createElement('button');b.type='button';b.className=x.className;b.dataset.eqx='1';
+ var w=d.classList.contains('eqx-wide')||d.classList.contains('wide');if(pref&&!w){d.classList.add('eqx-wide');w=true}label(b,w);
+ var wrap=x.parentNode.classList.contains('ibs')||x.parentNode.classList.contains('eqx-ibs')?x.parentNode:null;
+ if(!wrap){wrap=document.createElement('span');wrap.className='eqx-ibs';x.parentNode.insertBefore(wrap,x);wrap.appendChild(x)}
+ wrap.insertBefore(b,x)}
+function scan(){document.querySelectorAll('.drw,.eqac').forEach(fit)}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-eqx]');if(!b)return;e.preventDefault();e.stopPropagation();
+ var d=b.closest('.drw,.eqac');var w=!(d.classList.contains('eqx-wide')||d.classList.contains('wide'));d.classList.toggle('eqx-wide',w);if(!w)d.classList.remove('wide');pref=w;try{sessionStorage.setItem(K,w?'1':'0')}catch(x){}label(b,w)},true);
+var q=0;function mo(){if(q)return;q=requestAnimationFrame(function(){q=0;scan()})}
+function start(){scan();if(window.MutationObserver)new MutationObserver(mo).observe(document.body,{childList:true,subtree:true})}
+if(document.body)start();else document.addEventListener('DOMContentLoaded',start);
 })();
 </script>
 </head><body><div id="app">
