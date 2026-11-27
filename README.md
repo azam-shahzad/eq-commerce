@@ -30,6 +30,7 @@ Unzip and open `index.html` in a browser. No install or server needed.
 | Stock | `stock.html` |
 | Projects | `projects.html` |
 | Holding | `holding.html` |
+| Stakeholders | `stakeholders.html` |
 
 ## Colour palette
 
