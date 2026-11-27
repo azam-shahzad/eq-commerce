@@ -29,6 +29,7 @@ Unzip and open `index.html` in a browser. No install or server needed.
 | Pipeline | `pipeline.html` |
 | Stock | `stock.html` |
 | Projects | `projects.html` |
+| Depot Manager | `depot.html` |
 | Holding | `holding.html` |
 | Stakeholders | `stakeholders.html` |
 | Decision Log | `decisions.html` |
