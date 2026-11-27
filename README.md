@@ -32,6 +32,7 @@ Unzip and open `index.html` in a browser. No install or server needed.
 | Holding | `holding.html` |
 | Stakeholders | `stakeholders.html` |
 | Decision Log | `decisions.html` |
+| Administration | `admin.html` |
 
 ## Colour palette
 
