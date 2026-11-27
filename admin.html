@@ -984,15 +984,16 @@ const OP={navLabel:'Members',note:'Each member records only the steps their role
  sums:[{k:'all',tag:'ALL',title:'All members',sub:'Members, roles and what the server lets each of them record.',icon:OI.all,list:()=>MB},
   {k:'active',tag:'ACTIVE',title:'Active',sub:'Members who can sign in and record their steps.',icon:OI.ok,list:()=>MB.filter(x=>x.state==='Active')},
   {k:'invited',tag:'INVITED',title:'Invited',sub:'Invites sent, not joined yet.',icon:OI.inv,list:()=>MB.filter(x=>x.state==='Invited')}],
- apply:k=>{S.tab='members';S.rl='';$('#rlSel').value='';S.q='';$('#q').value='';if(k.startsWith('mb:')){const x=MB.find(y=>y.id===k.slice(3));S.st='all';if(x){S.q=x.name.toLowerCase();$('#q').value=x.name}}else S.st=k}};
-const OCOL={MEMBERS:'#6FD8EC',SUMMARY:'#8FE6C3'};
+ apply:k=>{S.tab='members';S.rl='';$('#rlSel').value='';S.q='';$('#q').value='';if(k.startsWith('rl:')){const r=oRl(k);S.st='all';if(r){S.rl=r[0];$('#rlSel').value=r[0]}}else if(k.startsWith('mb:')){const x=MB.find(y=>y.id===k.slice(3));S.st='all';if(x){S.q=x.name.toLowerCase();$('#q').value=x.name}}else S.st=k}};
+const OCOL={ROLES:'#6FD8EC',SUMMARY:'#8FE6C3'};
+const rslug=n=>n.toLowerCase().replace(/\s+/g,'-');const oRl=k=>k&&k.startsWith('rl:')?ROLES.find(r=>rslug(r[0])===k.slice(3)):null;const inRole=r=>MB.filter(x=>x.role===r[0]);
 let OG={key:'',sel:'',rev:0,nodes:[]};
 const f1=v=>v.toFixed(1);
 const oSum=k=>OP.sums.find(s=>s.k===k);
 const oMb=k=>k&&k.startsWith('mb:')?MB.find(x=>x.id===k.slice(3)):null;
-function oKey(){const k=S.ok||'all';if(k.startsWith('mb:'))return oMb(k)?k:'all';return oSum(k)?k:'all'}
+function oKey(){const k=S.ok||'all';if(k.startsWith('mb:'))return oMb(k)?k:'all';if(k.startsWith('rl:'))return oRl(k)?k:'all';return oSum(k)?k:'all'}
 function oPick(k){S.ok=k;render()}
-function oNodes(){const ns=MB.slice(0,7).map(x=>({k:'mb:'+x.id,grp:'MEMBERS',tag:x.role.toUpperCase(),title:x.name,mini:steps(x)?String(stSet(steps(x)).size):'—',icon:OI.mb,dim:!match(x),label:x.name+', '+x.role}));
+function oNodes(){const ns=ROLES.map(r=>{const L=inRole(r),inv=L.filter(x=>x.state==='Invited').length;return{k:'rl:'+rslug(r[0]),grp:'ROLES',tag:(r[2]?(r[2]==='1-25'?'ALL 25 STEPS':stSet(r[2]).size+(stSet(r[2]).size===1?' STEP':' STEPS')):'AN ASSIGNMENT')+(inv?' · '+inv+' INVITED':''),title:r[0],mini:String(L.length),icon:OI.mb,dim:!L.some(match),label:r[0]+': '+L.length+' member'+(L.length===1?'':'s')+(inv?', '+inv+' invited':'')}});
   OP.sums.filter(s=>s.k!=='all').forEach(s=>ns.push({k:s.k,grp:'SUMMARY',tag:'SUMMARY · STATE',title:s.title,mini:String(s.list().length),icon:s.icon,label:s.title+': '+s.list().length}));
   ns.push({k:'all',grp:'SUMMARY',tag:'SUMMARY · ALL',title:'All members',mini:String(MB.length),icon:OI.all,label:'All members: '+MB.length});return ns}
 function oGeo(){const v=$('#orbitV'),T=v.offsetTop,zh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zh'))||innerHeight;
@@ -1043,7 +1044,18 @@ function oMbCard(x){const ci=colOf(x),full=ACC.filter(r=>r[2][ci]==='Full').leng
    <div class="o-sec">${oRs(3,tiles)}</div>
    <div class="o-sec">${oRs(4,`<div class="sec">THE TWENTY-FIVE</div>${s25o(x)}`)}</div>
    ${o.length?`<div class="o-sec">${oRs(5,`<div class="sec">ALSO IN ${dept(x)==='—'?'THE TENANT':dept(x).toUpperCase()}</div>${oTable(o)}`)}</div>`:''}
-   ${oRs(6,`<span>${OP.note}</span><button class="gh" type="button" data-onode="${x.state.toLowerCase()}">← All ${x.state}</button><button class="go" type="button" data-oopen="${x.id}">Edit <span aria-hidden="true">→</span></button>`,'div','o-ft')}`}
+   ${oRs(6,`<span>${OP.note}</span><button class="gh" type="button" data-onode="rl:${rslug(x.role)}">← All ${x.role}</button><button class="go" type="button" data-oopen="${x.id}">Edit <span aria-hidden="true">→</span></button>`,'div','o-ft')}`}
+function oRlCard(r){const L=inRole(r),ci=ACOL.findIndex(c=>c[0]===r[3]),full=ACC.filter(a=>a[2][ci]==='Full').length,part=ACC.filter(a=>a[2][ci]!=='Full'&&a[2][ci]!=='—').length,st=stSet(r[2]);
+  let bar='';for(let n=1;n<=25;n++)bar+='<i class="'+(st.has(n)?'on':'')+'"></i>';
+  const tiles=`<div class="tiles"><div class="tile"><small>Members</small><b>${L.length}</b><i style="--g:var(--gm);width:${Math.max(6,L.length/MB.length*100)}%"></i></div><div class="tile"><small>Steps owned</small><b>${r[2]?st.size+' of 25':'None'}</b><i style="--g:var(--gm);width:${st.size/25*100}%"></i></div><div class="tile"><small>Field groups, full</small><b>${full} of ${ACC.length}</b><i style="--g:var(--gm);width:${full/ACC.length*100}%"></i></div></div>`;
+  const sees=`<div class="sees">${ACC.map(a=>`<div><span>${a[0]}</span>${avc(a[2][ci])}</div>`).join('')}</div>`;
+  return `<div class="o-ch"><div style="min-width:0">${oRs(0,'ROLE · '+(r[1]==='—'?'WHOLE TENANT':r[1].toUpperCase()),'div','o-k')}${oRs(1,r[0]+` <span class="o-yr">${r[1]==='—'?'every department':r[1]}</span>`,'h2')}${oRs(2,(r[2]?'Owns steps '+r[2].replace(/-/g,'–'):'No steps · works from an assignment')+(part?' · '+part+' partial field group'+(part===1?'':'s'):''),'p','ps')}</div>
+    ${oRs(2,`<small>MEMBERS</small><p>${L.length?L.map(x=>esc(x.name)).join(', '):'Nobody yet'}</p>`,'div','o-ins')}</div>
+   <div class="o-sec">${oRs(3,tiles)}</div>
+   <div class="o-sec">${oRs(4,`<div class="sec">THE TWENTY-FIVE</div><div class="s25o" aria-hidden="true">${bar}</div>`)}</div>
+   <div class="o-sec">${oRs(5,`<div class="sec">PEOPLE IN THIS ROLE · ${L.length}</div>${L.length?oTable(L):'<div class="empty"><b>Nobody has this role</b><p>Invite someone and pick '+r[0]+'.</p></div>'}`)}</div>
+   <div class="o-sec">${oRs(5,`<div class="sec">WHAT THE SERVER SENDS ${r[0].toUpperCase()}</div>${sees}`)}</div>
+   ${oRs(6,`<span>${OP.note}</span><button class="gh" type="button" data-oadd>+ Invite a member</button><button class="go" type="button" data-ogo="list" data-ok="rl:${rslug(r[0])}">Show in list <span aria-hidden="true">→</span></button>`,'div','o-ft')}`}
 function oSumCard(k){const s=oSum(k),all=s.list(),L=all.filter(match),hid=all.length-L.length;
   const rows=L.length?oTable(L):`<div class="empty"><b>No members match</b><p>Your search or filter hides them.</p><button class="gh" type="button" data-reset>Clear the filters</button></div>`;
   return `<div class="o-ch"><div style="min-width:0">${oRs(0,'SUMMARY · '+s.tag,'div','o-k')}${oRs(1,s.title,'h2')}${oRs(2,s.sub+(k!=='all'?'<button type="button" class="fl" data-onode="all">Show all</button>':''),'p','ps')}</div>
@@ -1054,27 +1066,27 @@ function renderOrbit(){
   const ns=oNodes(),G=oGeo(),key=ns.map(n=>n.k).join()+'|'+G.T+'|'+G.H;
   if(key!==OG.key){oBuild(ns,G);OG.key=key}
   OG.nodes.forEach((n,i)=>{const m=ns[i],b=document.querySelector(`.o-node[data-onode="${m.k}"]`);b.querySelector('.mn').textContent=m.mini;b.classList.toggle('dim',!!m.dim);document.querySelector(`[data-od="${i}"]`).classList.toggle('dim',!!m.dim);b.setAttribute('aria-label',m.label)});
-  const k=oKey(),x=oMb(k),nk=x&&!OG.nodes.some(n=>n.k===k)?x.state.toLowerCase():k,i=OG.nodes.findIndex(n=>n.k===nk),n=OG.nodes[i];
+  const k=oKey(),x=oMb(k),rl=oRl(k),nk=x?'rl:'+rslug(x.role):k,i=Math.max(0,OG.nodes.findIndex(n=>n.k===nk)),n=OG.nodes[i];
   OG.nodes.forEach((m,j)=>{const on=j===i,b=document.querySelector(`.o-node[data-onode="${m.k}"]`);b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);document.querySelector(`[data-od="${j}"]`).classList.toggle('on',on);document.querySelector(`[data-oc="${j}"]`).style.strokeOpacity=on?0:.2});
   $('#oFlow').setAttribute('d',n.fwd);document.querySelectorAll('.o-mote').forEach(m=>m.style.offsetPath=`path('${n.fwd}')`);
-  const rd=x?{tg:'MEMBER · '+x.role.toUpperCase(),tt:x.name,vl:steps(x)?stSet(steps(x)).size:'—',sb:steps(x)?'of 25 steps owned':'works from an assignment',pct:stSet(steps(x)).size/25}:(s=>{const L=s.list();return{tg:'SUMMARY · '+s.tag,tt:s.title,vl:L.length,sb:'of '+MB.length+' members',pct:MB.length?L.length/MB.length:0}})(oSum(k));
+  const rd=x?{tg:'MEMBER · '+x.role.toUpperCase(),tt:x.name,vl:steps(x)?stSet(steps(x)).size:'—',sb:steps(x)?'of 25 steps owned':'works from an assignment',pct:stSet(steps(x)).size/25}:rl?{tg:'ROLE · '+(rl[1]==='—'?'WHOLE TENANT':rl[1].toUpperCase()),tt:rl[0],vl:inRole(rl).length,sb:'member'+(inRole(rl).length===1?'':'s')+' · '+(rl[2]?stSet(rl[2]).size+' of 25 steps':'an assignment'),pct:rl[2]?stSet(rl[2]).size/25:.06}:(s=>{const L=s.list();return{tg:'SUMMARY · '+s.tag,tt:s.title,vl:L.length,sb:'of '+MB.length+' members',pct:MB.length?L.length/MB.length:0}})(oSum(k));
   const changed=OG.sel!==k,sw=changed?(OG.rev++%2?'o-swb':'o-swa'):($('#oRead').className.match(/o-sw[ab]/)||['o-swa'])[0];
   $('#oRead').className='o-read '+sw;$('#oRead').innerHTML=`<div class="o-rs tg">${rd.tg}</div><div class="o-rs tt" style="animation-delay:.05s">${esc(rd.tt)}</div><div class="vl">${rd.vl}</div><div class="o-rs sb" style="animation-delay:.1s">${esc(rd.sb)}</div>`;
   requestAnimationFrame(()=>{const g=$('#oGauge');g&&(g.style.strokeDasharray=`${f1(Math.max(.06,Math.min(1,rd.pct))*621.3)} 1000`)});
   if(changed&&OG.sel){const z=$('#oZap');z.style.offsetPath=`path('${n.rev}')`;z.className='o-zap '+(OG.rev%2?'za':'zb');$('#oRip').className='o-rip '+(OG.rev%2?'ra':'rb')}
   const c=$('#oCard');c.className='glass o-card '+sw;c.setAttribute('aria-label',rd.tt);
-  c.innerHTML=x?oMbCard(x):oSumCard(k);if(changed)c.scrollTop=0;
+  c.innerHTML=x?oMbCard(x):rl?oRlCard(rl):oSumCard(k);if(changed)c.scrollTop=0;
   OG.sel=k}
 addEventListener('resize',()=>{if(S.page==='orbit')renderOrbit()});
-function oGo(k,view){if(view==='orbit'){S.page='orbit';S.ok=k;location.hash=k.startsWith('mb:')?'orbit-'+k.slice(3):'orbit';return}OP.apply(k);S.page='page';S.view=view;DH='';location.hash=view;render();scrollTo(0,0)}
+function oGo(k,view){if(view==='orbit'){S.page='orbit';S.ok=k;location.hash=k.startsWith('mb:')?'orbit-'+k.slice(3):k.startsWith('rl:')?'orbit-role-'+k.slice(3):'orbit';return}OP.apply(k);S.page='page';S.view=view;DH='';location.hash=view;render();scrollTo(0,0)}
 function syncToggles(){
   $$('#lySeg [data-v]').forEach(b=>{const on=b.dataset.v===S.view;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))});
   $$('.ivt [data-iv]').forEach(b=>{const on=b.dataset.iv===(S.page==='orbit'?'orbit':'grid');b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))});
   document.body.classList.toggle('vorb',S.page==='orbit')}
-function baseHash(){if(S.page==='orbit'){const k=oKey();return k==='all'?'orbit':'orbit-'+(k.startsWith('mb:')?k.slice(3):k)}return S.tab==='members'?S.view:S.tab}
+function baseHash(){if(S.page==='orbit'){const k=oKey();return k==='all'?'orbit':'orbit-'+(k.startsWith('mb:')?k.slice(3):k.startsWith('rl:')?'role-'+k.slice(3):k)}return S.tab==='members'?S.view:S.tab}
 function setHash(){const h=DH||baseHash();if(decodeURIComponent(location.hash.slice(1))!==h)history.replaceState(null,'','#'+h)}
 function readOrbitHash(h){if(h!=='orbit'&&!h.startsWith('orbit-'))return false;S.page='orbit';const r=h.slice(6).toLowerCase();
-  S.ok=!r?'all':oSum(r)?r:MB.some(x=>x.id===r)?'mb:'+r:'all';return true}
+  S.ok=!r?'all':oSum(r)?r:r.startsWith('role-')&&oRl('rl:'+r.slice(5))?'rl:'+r.slice(5):MB.some(x=>x.id===r)?'mb:'+r:'all';return true}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-onode],[data-pick],[data-v],[data-ogo],[data-iv],[data-oopen]');if(!t)return;
   if(t.dataset.onode){oPick(t.dataset.onode);return}
   if(t.dataset.pick){oPick('mb:'+t.dataset.pick);return}
