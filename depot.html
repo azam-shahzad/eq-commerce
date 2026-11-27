@@ -334,6 +334,8 @@ body.vorb .strip,body.vorb #low{display:none}
 .o-node .tt{font-size:13px;font-weight:600;color:#F1F5F7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .o-node .mn{flex:none;font:700 12px var(--display);color:#A9B3B8;font-variant-numeric:tabular-nums;white-space:nowrap}
 .o-node.bad .mn{color:var(--red)}
+.o-node.bad{border-color:rgba(242, 116, 89,.7)!important;background:linear-gradient(90deg,rgba(242, 116, 89,.14),rgba(28, 38, 44,.72))}
+.o-node.bad .tg{color:var(--red);opacity:1}
 .o-node.dim{opacity:.4}
 .o-node.on{background:linear-gradient(90deg,rgba(50, 62, 68,.85),rgba(28, 38, 44,.8));border-color:rgba(143, 230, 195,.35);box-shadow:0 10px 30px rgba(143, 230, 195,.22)}
 .o-node.on .ch{background:radial-gradient(circle at 35% 30%,#8FE6C3,#8FE6C3);border-color:rgba(241, 245, 247,.7);color:#141B1F;box-shadow:0 0 16px rgba(143, 230, 195,.65);animation:ob-chip .7s cubic-bezier(.34,1.56,.64,1) both}
@@ -867,15 +869,16 @@ const OP={navLabel:'Buses at the depot',note:'Exceptions first, then oldest arri
   {k:'damage',tag:'DAMAGE',title:'Damage reported',sub:'Work these first. Sign for them only after you have seen the damage.',icon:OI.dmg,list:()=>DP.filter(x=>x.cust==='damage')},
   {k:'held',tag:'IN CUSTODY',title:'In custody',sub:'Signed for. These can move on.',icon:OI.ok,list:()=>DP.filter(x=>isHeld(x))}],
  apply:k=>{S.kd='';$('#kdSel').value='';S.q='';$('#q').value='';if(k.startsWith('bus:')){S.st='all';S.q=k.slice(4).toLowerCase();$('#q').value=k.slice(4)}else S.st=k}};
-const OCOL={BUSES:'#6FD8EC',SUMMARY:'#8FE6C3'};
+const OCOL={'TO WORK':'#6FD8EC',SUMMARY:'#8FE6C3'};
 let OG={key:'',sel:'',rev:0,nodes:[]};
 const f1=v=>v.toFixed(1);
 const oSum=k=>OP.sums.find(s=>s.k===k);
 const oBus=k=>k&&k.startsWith('bus:')?DP.find(x=>x.id===k.slice(4)):null;
 function oKey(){const k=S.ok||'all';if(k.startsWith('bus:'))return oBus(k)?k:'all';return oSum(k)?k:'all'}
 function oPick(k){S.ok=k;render()}
-function oNodes(){const ns=DP.slice(0,6).map(x=>({k:'bus:'+x.id,grp:'BUSES',tag:(x.cust==='damage'?'DAMAGE':isHeld(x)?'IN CUSTODY':'NOT SIGNED'),title:x.id+' · '+x.model.replace(/^Setra /,''),mini:x.bay||'—',icon:OI.bus,bad:ex(x),dim:!match(x),label:x.id+', '+CU[x.cust][0]+', '+CU[x.cust][2]}));
-  OP.sums.filter(s=>s.k!=='all').forEach(s=>ns.push({k:s.k,grp:'SUMMARY',tag:'SUMMARY · CUSTODY',title:s.title,mini:String(s.list().length),icon:s.icon,bad:s.k==='damage'&&s.list().length>0,label:s.title+': '+s.list().length}));
+const OMAX=6;const oWork=()=>DP.filter(x=>!isHeld(x));const oArr=x=>x.night?x.arr.replace('Today, ','')+' today':(x.arr?x.arr.replace(/ \d{4}$/,''):'no arrival');
+function oNodes(){const W=oWork(),more=Math.max(0,W.length-OMAX);const ns=W.slice(0,OMAX).map((x,i)=>({k:'bus:'+x.id,grp:'TO WORK',tag:(i+1)+' · '+(x.cust==='damage'?'DAMAGE':'NOT SIGNED'),title:x.id+' · '+oArr(x),mini:x.bay||'—',icon:OI.bus,bad:ex(x),dim:!match(x),label:x.id+', '+CU[x.cust][0]+', '+CU[x.cust][2]}));
+  OP.sums.filter(s=>s.k!=='all').forEach(s=>ns.push({k:s.k,grp:'SUMMARY',tag:s.k==='waiting'&&more?'SUMMARY · +'+more+' MORE':'SUMMARY · CUSTODY',title:s.title,mini:String(s.list().length),icon:s.icon,bad:s.k==='damage'&&s.list().length>0,label:s.title+': '+s.list().length}));
   ns.push({k:'all',grp:'SUMMARY',tag:'SUMMARY · ALL',title:'At the depot',mini:String(DP.length),icon:OI.all,label:'At the depot: '+DP.length});return ns}
 function oGeo(){const v=$('#orbitV'),T=v.offsetTop,zh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zh'))||innerHeight;
   const H=Math.max(640,Math.floor(zh-T-24));v.style.height=H+'px';return{T,H,cx:-150,cy:Math.round(T+H/2)}}
@@ -933,7 +936,7 @@ function renderOrbit(){
   const ns=oNodes(),G=oGeo(),key=ns.map(n=>n.k).join()+'|'+G.T+'|'+G.H;
   if(key!==OG.key){oBuild(ns,G);OG.key=key}
   OG.nodes.forEach((n,i)=>{const m=ns[i],b=document.querySelector(`.o-node[data-onode="${m.k}"]`);b.querySelector('.mn').textContent=m.mini;b.classList.toggle('bad',!!m.bad);b.classList.toggle('dim',!!m.dim);document.querySelector(`[data-od="${i}"]`).classList.toggle('dim',!!m.dim);b.setAttribute('aria-label',m.label)});
-  const k=oKey(),x=oBus(k),i=OG.nodes.findIndex(n=>n.k===k),n=OG.nodes[i<0?OG.nodes.length-1:i];
+  const k=oKey(),x=oBus(k);let i=OG.nodes.findIndex(n=>n.k===k);if(i<0&&x)i=OG.nodes.findIndex(n=>n.k===(isHeld(x)?'held':x.cust==='damage'?'damage':'waiting'));const n=OG.nodes[i<0?OG.nodes.length-1:i];
   OG.nodes.forEach((m,j)=>{const on=m===n,b=document.querySelector(`.o-node[data-onode="${m.k}"]`);b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);document.querySelector(`[data-od="${j}"]`).classList.toggle('on',on);document.querySelector(`[data-oc="${j}"]`).style.strokeOpacity=on?0:.2});
   $('#oFlow').setAttribute('d',n.fwd);document.querySelectorAll('.o-mote').forEach(m=>m.style.offsetPath=`path('${n.fwd}')`);
   const rd=x?{tg:CU[x.cust][0].toUpperCase(),tt:x.id+' · '+x.model,vl:x.bay||'—',sb:'bay · key '+(x.key||'—')+' · '+CU[x.cust][2].toLowerCase(),pct:isHeld(x)?1:.3}:(s=>{const L=s.list();return{tg:'SUMMARY · '+s.tag,tt:s.title,vl:L.length,sb:'of '+DP.length+' buses at the depot',pct:DP.length?L.length/DP.length:0}})(oSum(k));
