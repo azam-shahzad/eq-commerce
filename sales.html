@@ -675,7 +675,9 @@ if(document.body)watch();else document.addEventListener('DOMContentLoaded',watch
 var IN='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2.5h4v4M13.5 2.5L9 7M6.5 13.5h-4v-4M2.5 13.5L7 9"/></svg>',
 OUT='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 6.5h-4v-4M9.5 6.5l4-4M2.5 9.5h4v4M6.5 9.5l-4 4"/></svg>';
 var K='eqxWide',pref=false;try{pref=sessionStorage.getItem(K)==='1'}catch(e){}
-function has(d){return d.querySelector('[data-eqx],#wideBtn,[aria-label="Expand panel"],[aria-label="Narrow panel"],[aria-label="Widen the panel"],[aria-label="Expand_panel"]')}
+var OWN='#wideBtn,[data-wide],[aria-label="Expand panel"],[aria-label="Narrow panel"],[aria-label="Widen the panel"],[aria-label="Narrow the panel"],[aria-label="Expand_panel"]';
+function own(d){return d.querySelector(OWN)}
+function has(d){var o=own(d),m=d.querySelector('[data-eqx]');if(o&&m){m.remove();return true}return !!(o||m)}
 function label(b,w){b.setAttribute('aria-label',w?'Narrow panel':'Expand panel');b.title=w?'Narrow panel':'Expand panel';b.setAttribute('aria-pressed',String(w));b.innerHTML=w?OUT:IN}
 function fit(d){var x=d.querySelector('.ib[data-close][aria-label^="Close"],.ib[data-x="close"],.eqac-x,.dh button[aria-label^="Close"],button.ib[aria-label^="Close"]');if(!x||has(d))return;
  var b=document.createElement('button');b.type='button';b.className=x.className;b.dataset.eqx='1';
